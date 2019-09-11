@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Unit tests for phonenumberutil.py"""
 
 # Based on original Java code:
@@ -18,15 +17,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import sys
-import re
 import unittest
 
 from phonenumbers import PhoneNumberType, PhoneMetadata, NumberParseException
 from phonenumbers import phonenumberutil, PhoneNumber, is_emergency_number
 from phonenumbers import shortnumberinfo, ShortNumberCost, AsYouTypeFormatter
-from phonenumbers import PhoneNumberMatcher, Leniency, is_possible_short_number_for_region
+from phonenumbers import is_possible_short_number_for_region
 from phonenumbers.util import prnt
-from phonenumbers.re_util import fullmatch
 
 
 class ExampleNumbersTest(unittest.TestCase):
@@ -254,14 +251,6 @@ class ExampleNumbersTest(unittest.TestCase):
         self.assertFalse(shortnumberinfo.is_carrier_specific(esNumber))
 
     # Extra tests that need access to the real metadata
-    def testIsraelShortNumber(self):
-        # Python version extra test:
-        # Send in a 4-digit Israel phone number
-        matcher = PhoneNumberMatcher("1234", "IL", leniency=Leniency.POSSIBLE)
-        self.assertFalse(matcher.has_next())
-        matcher2 = PhoneNumberMatcher("*1234", "IL", leniency=Leniency.POSSIBLE)
-        self.assertTrue(matcher2.has_next())
-
     def testMissingShortMetadata(self):
         # Python version extra test:
         # Check a short number for a country (GQ) that has no short metadata

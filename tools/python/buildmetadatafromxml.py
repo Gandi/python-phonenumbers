@@ -162,7 +162,7 @@ def _dews_re(re_str):
         return re.sub(r'\s', '', re_str)
 
 
-_NUM_RE = re.compile('\d+')
+_NUM_RE = re.compile(r'\d+')
 _RANGE_RE = re.compile(r'\[(?P<min>\d+)-(?P<max>\d+)\]')
 
 
@@ -196,8 +196,8 @@ def _expand_formatting_rule(rule, national_prefix):
         return None
     if national_prefix is None:
         national_prefix = u("")
-    rule = re.sub(u("\$NP"), national_prefix, rule)
-    rule = re.sub(u("\$FG"), u("$1"), rule)
+    rule = re.sub(u(r"\$NP"), national_prefix, rule)
+    rule = re.sub(u(r"\$FG"), u("$1"), rule)
     return rule
 
 
@@ -215,7 +215,7 @@ class XAlternateNumberFormat(UnicodeMixin):
                 raise Exception("No format pattern found")
             else:
                 # Replace '$1' etc  with '\1' to match Python regexp group reference format
-                self.o.format = re.sub('\$', u(r'\\'), self.o.format)
+                self.o.format = re.sub(r'\$', u(r'\\'), self.o.format)
             xleading_digits = xtag.findall("leadingDigits")
             for xleading_digit in xleading_digits:
                 self.o.leading_digits_pattern.append(_dews_re(xleading_digit.text))
@@ -254,7 +254,7 @@ class XNumberFormat(UnicodeMixin):
                 self.o.national_prefix_formatting_rule = national_prefix_formatting_rule
             if self.o.national_prefix_formatting_rule is not None:
                 # Replace '$1' etc  with '\1' to match Python regexp group reference format
-                self.o.national_prefix_formatting_rule = re.sub('\$', r'\\', self.o.national_prefix_formatting_rule)
+                self.o.national_prefix_formatting_rule = re.sub(r'\$', r'\\', self.o.national_prefix_formatting_rule)
 
             if not self.o.national_prefix_optional_when_formatting and national_prefix_optional_when_formatting:
                 # If attrib is None, it was missing and inherits territory-wide value
@@ -269,14 +269,14 @@ class XNumberFormat(UnicodeMixin):
                 self.o.domestic_carrier_code_formatting_rule = carrier_code_formatting_rule
             if self.o.domestic_carrier_code_formatting_rule is not None:
                 # Replace '$1' etc  with '\1' to match Python regexp group reference format
-                self.o.domestic_carrier_code_formatting_rule = re.sub('\$(\d)', r'\\\1', self.o.domestic_carrier_code_formatting_rule)
+                self.o.domestic_carrier_code_formatting_rule = re.sub(r'\$(\d)', r'\\\1', self.o.domestic_carrier_code_formatting_rule)
 
             self.o.format = _get_unique_child_value(xtag, 'format')
             if self.o.format is None:
                 raise Exception("No format pattern found")
             else:
                 # Replace '$1' etc  with '\1' to match Python regexp group reference format
-                self.o.format = re.sub('\$', u(r'\\'), self.o.format)
+                self.o.format = re.sub(r'\$', u(r'\\'), self.o.format)
             xleading_digits = xtag.findall("leadingDigits")
             for xleading_digit in xleading_digits:
                 self.o.leading_digits_pattern.append(_dews_re(xleading_digit.text))
@@ -296,7 +296,7 @@ class XNumberFormat(UnicodeMixin):
                 self.io.format = self.o.format
             else:
                 # Replace '$1' etc  with '\1' to match Python regexp group reference format
-                intl_format = re.sub('\$', u(r'\\'), intl_format)
+                intl_format = re.sub(r'\$', u(r'\\'), intl_format)
                 if intl_format != DATA_NA:
                     self.io.format = intl_format
                 owning_xterr.has_explicit_intl_format = True
@@ -310,7 +310,7 @@ class XNumberFormat(UnicodeMixin):
 
 class XPhoneNumberDesc(UnicodeMixin):
     """Parse PhoneNumberDesc object from XML element"""
-    def __init__(self, xterritory, tag, template=None, general_desc=False):
+    def __init__(self, xterritory, tag, template=None, has_possible_lengths=True, has_example_number=True):
         id = xterritory.attrib['id']
         xtag = _get_unique_child(xterritory, tag)
         self.xtag = xtag
@@ -340,23 +340,23 @@ class XPhoneNumberDesc(UnicodeMixin):
             else:
                 raise Exception("Missing required nationalNumberPattern element in %s.%s" % (id, tag))
 
-        # An exampleNumber element is present iff this is not the generalDesc
+        # An exampleNumber element may be present.
         example_number = _get_unique_child_value(xtag, 'exampleNumber')
-        if (not lax) and (not general_desc) and (example_number is None):
+        if (not lax) and has_example_number and (example_number is None):
             raise Exception("Missing required exampleNumber element in %s.%s" % (id, tag))
-        if general_desc and example_number is not None:
+        if (not has_example_number) and example_number is not None:
             if lax:
                 example_number = None
             else:
-                raise Exception("Unexpected exampleNumber element for generalDesc in %s.%s" % (id, tag))
+                raise Exception("Unexpected exampleNumber element in %s.%s" % (id, tag))
         self.o.example_number = example_number
 
-        # A possibleLengths element is present iff this is not the generalDesc
+        # A possibleLengths element may be present.
         possible_lengths = _get_unique_child(xtag, 'possibleLengths')
-        if (not lax) and (not general_desc) and (possible_lengths is None):
+        if (not lax) and has_possible_lengths and (possible_lengths is None):
             raise Exception("Missing required possibleLengths element in %s.%s" % (id, tag))
-        if general_desc and possible_lengths is not None:
-            raise Exception("Unexpected possibleLengths for generalDesc in %s.%s" % (id, tag))
+        if (not has_possible_lengths) and possible_lengths is not None:
+            raise Exception("Unexpected possibleLengths in %s.%s" % (id, tag))
         if possible_lengths is not None:
             national_lengths = possible_lengths.attrib['national']  # REQUIRED attribute
             if national_lengths == "-1":
@@ -410,7 +410,7 @@ class XTerritory(UnicodeMixin):
         self.o.national_prefix_transform_rule = xterritory.get('nationalPrefixTransformRule', None)
         if self.o.national_prefix_transform_rule is not None:
             # Replace '$1' etc  with '\1' to match Python regexp group reference format
-            self.o.national_prefix_transform_rule = re.sub('\$', r'\\', self.o.national_prefix_transform_rule)
+            self.o.national_prefix_transform_rule = re.sub(r'\$', r'\\', self.o.national_prefix_transform_rule)
         self.o.preferred_extn_prefix = xterritory.get('preferredExtnPrefix', None)
         national_prefix_formatting_rule = xterritory.get('nationalPrefixFormattingRule', None)
         national_prefix_optional_when_formatting = get_true_attrib(xterritory, 'nationalPrefixOptionalWhenFormatting')
@@ -430,12 +430,14 @@ class XTerritory(UnicodeMixin):
         self.o.leading_zero_possible = get_true_attrib(xterritory, 'leadingZeroPossible')
         self.o.mobile_number_portable_region = get_true_attrib(xterritory, 'mobileNumberPortableRegion')
 
-        # Retrieve the various PhoneNumberDesc elements, which mostly have the form:
-        #   (nationalNumberPattern, possibleLengths, exampleNumber)
-        # However the general_desc is first and special; it has form:
+        # Retrieve the various PhoneNumberDesc elements, which have one of the forms:
+        #   (possibleLengths, exampleNumber, nationalNumberPattern)
+        #   (possibleLengths, nationalNumberPattern)
         #   (nationalNumberPattern)
-        # and it will be used to fill out missing fields in many of the other PhoneNumberDesc elements.
-        self.o.general_desc = XPhoneNumberDesc(xterritory, 'generalDesc', general_desc=True).o
+
+        # The general_desc is first and special; it is used to fill out missing fields
+        # in many of the other PhoneNumberDesc elements.
+        self.o.general_desc = XPhoneNumberDesc(xterritory, 'generalDesc', has_possible_lengths=False, has_example_number=False).o
 
         self.o.toll_free = XPhoneNumberDesc(xterritory, 'tollFree', template=self.o.general_desc).o
         self.o.premium_rate = XPhoneNumberDesc(xterritory, 'premiumRate', template=self.o.general_desc).o
@@ -450,7 +452,7 @@ class XTerritory(UnicodeMixin):
             self.o.voip = XPhoneNumberDesc(xterritory, 'voip', template=self.o.general_desc).o
             self.o.uan = XPhoneNumberDesc(xterritory, 'uan', template=self.o.general_desc).o
             self.o.voicemail = XPhoneNumberDesc(xterritory, 'voicemail', template=self.o.general_desc).o
-            self.o.no_international_dialling = XPhoneNumberDesc(xterritory, 'noInternationalDialling', template=self.o.general_desc).o
+            self.o.no_international_dialling = XPhoneNumberDesc(xterritory, 'noInternationalDialling', template=self.o.general_desc, has_example_number=False).o
 
             # Skip noInternationalDialling when combining possible length information
             sub_descs = (self.o.toll_free, self.o.premium_rate, self.o.fixed_line, self.o.mobile,

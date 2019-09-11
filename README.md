@@ -3,14 +3,21 @@ phonenumbers Python Library
 
 [![Coverage Status](https://coveralls.io/repos/daviddrysdale/python-phonenumbers/badge.svg?branch=dev&service=github)](https://coveralls.io/github/daviddrysdale/python-phonenumbers?branch=dev)
 
-This is a Python port of [Google's libphonenumber library](https://github.com/googlei18n/libphonenumber)
+This is a Python port of [Google's libphonenumber library](https://github.com/google/libphonenumber)
 It supports Python 2.5-2.7 and Python 3.x (in the same codebase, with no
 [2to3](http://docs.python.org/2/library/2to3.html) conversion needed).
 
 Original Java code is Copyright (C) 2009-2015 The Libphonenumber Authors.
 
-Release [HISTORY](python/HISTORY.md), derived from [upstream release notes](https://github.com/googlei18n/libphonenumber/blob/master/release_notes.txt).
+Release [HISTORY](python/HISTORY.md), derived from [upstream release notes](https://github.com/google/libphonenumber/blob/master/release_notes.txt).
 
+
+Installation
+-------------
+Install using [pip](https://pypi.org/project/phonenumbers/) with:
+```
+pip install phonenumbers
+```
 
 Example Usage
 -------------
@@ -23,17 +30,17 @@ unique).
 ```pycon
 >>> import phonenumbers
 >>> x = phonenumbers.parse("+442083661177", None)
->>> print x
+>>> print(x)
 Country Code: 44 National Number: 2083661177 Leading Zero: False
 >>> type(x)
 <class 'phonenumbers.phonenumber.PhoneNumber'>
 >>> y = phonenumbers.parse("020 8366 1177", "GB")
->>> print y
+>>> print(y)
 Country Code: 44 National Number: 2083661177 Leading Zero: False
 >>> x == y
 True
 >>> z = phonenumbers.parse("00 1 650 253 2222", "GB")  # as dialled from GB, not a GB number
->>> print z
+>>> print(z)
 Country Code: 1 National Number: 6502532222 Leading Zero(s): False
 ```
 
@@ -43,14 +50,14 @@ in an assigned exchange).
 
 ```pycon
 >>> z = phonenumbers.parse("+120012301", None)
->>> print z
+>>> print(z)
 Country Code: 1 National Number: 20012301 Leading Zero: False
 >>> phonenumbers.is_possible_number(z)  # too few digits for USA
 False
 >>> phonenumbers.is_valid_number(z)
 False
 >>> z = phonenumbers.parse("+12001230101", None)
->>> print z
+>>> print(z)
 Country Code: 1 National Number: 2001230101 Leading Zero: False
 >>> phonenumbers.is_possible_number(z)
 True
@@ -79,11 +86,11 @@ formats available (under `PhoneNumberFormat`), and the `format_number` function 
 
 ```pycon
 >>> phonenumbers.format_number(x, phonenumbers.PhoneNumberFormat.NATIONAL)
-u'020 8366 1177'
+'020 8366 1177'
 >>> phonenumbers.format_number(x, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
-u'+44 20 8366 1177'
+'+44 20 8366 1177'
 >>> phonenumbers.format_number(x, phonenumbers.PhoneNumberFormat.E164)
-u'+442083661177'
+'+442083661177'
 ```
 
 If your application has a UI that allows the user to type in a phone number, it's nice to get the formatting
@@ -91,26 +98,26 @@ applied as the user types.   The `AsYouTypeFormatter` object allows this.
 
 ```pycon
 >>> formatter = phonenumbers.AsYouTypeFormatter("US")
->>> print formatter.input_digit("6")
-6
->>> print formatter.input_digit("5")
-65
->>> print formatter.input_digit("0")
-(650
->>> print formatter.input_digit("2")
-(650) 2
->>> print formatter.input_digit("5")
-(650) 25
->>> print formatter.input_digit("3")
-(650) 253
->>> print formatter.input_digit("2")
-650-2532
->>> print formatter.input_digit("2")
-(650) 253-22
->>> print formatter.input_digit("2")
-(650) 253-222
->>> print formatter.input_digit("2")
-(650) 253-2222
+>>> formatter.input_digit("6")
+'6'
+>>> formatter.input_digit("5")
+'65'
+>>> formatter.input_digit("0")
+'650'
+>>> formatter.input_digit("2")
+'650 2'
+>>> formatter.input_digit("5")
+'650 25'
+>>> formatter.input_digit("3")
+'650 253'
+>>> formatter.input_digit("2")
+'650-2532'
+>>> formatter.input_digit("2")
+'(650) 253-22'
+>>> formatter.input_digit("2")
+'(650) 253-222'
+>>> formatter.input_digit("2")
+'(650) 253-2222'
 ```
 
 Sometimes, you've got a larger block of text that may or may not have some phone numbers inside it.  For this,
@@ -121,12 +128,12 @@ with information about where the match occurred in the original string.
 ```pycon
 >>> text = "Call me at 510-748-8230 if it's before 9:30, or on 703-4800500 after 10am."
 >>> for match in phonenumbers.PhoneNumberMatcher(text, "US"):
-...     print match
+...     print(match)
 ...
 PhoneNumberMatch [11,23) 510-748-8230
 PhoneNumberMatch [51,62) 703-4800500
 >>> for match in phonenumbers.PhoneNumberMatcher(text, "US"):
-...     print phonenumbers.format_number(match.number, phonenumbers.PhoneNumberFormat.E164)
+...     print(phonenumbers.format_number(match.number, phonenumbers.PhoneNumberFormat.E164))
 ...
 +15107488230
 +17034800500
@@ -138,14 +145,14 @@ You might want to get some information about the location that corresponds to a 
 ```pycon
 >>> from phonenumbers import geocoder
 >>> ch_number = phonenumbers.parse("0431234567", "CH")
->>> print repr(geocoder.description_for_number(ch_number, "de"))
-u'Z\\xfcrich'
->>> print repr(geocoder.description_for_number(ch_number, "en"))
-u'Zurich'
->>> print repr(geocoder.description_for_number(ch_number, "fr"))
-u'Zurich'
->>> print repr(geocoder.description_for_number(ch_number, "it"))
-u'Zurigo'
+>>> geocoder.description_for_number(ch_number, "de")
+'Zürich'
+>>> geocoder.description_for_number(ch_number, "en")
+'Zurich'
+>>> geocoder.description_for_number(ch_number, "fr")
+'Zurich'
+>>> geocoder.description_for_number(ch_number, "it")
+'Zurigo'
 ```
 
 For mobile numbers in some countries, you can also find out information about which carrier
@@ -154,8 +161,8 @@ originally owned a phone number.
 ```pycon
 >>> from phonenumbers import carrier
 >>> ro_number = phonenumbers.parse("+40721234567", "RO")
->>> print repr(carrier.name_for_number(ro_number, "en"))
-u'Vodafone'
+>>> carrier.name_for_number(ro_number, "en")
+'Vodafone'
 ```
 
 You might also be able to retrieve a list of time zone names that the number potentially
@@ -164,12 +171,12 @@ belongs to.
 ```pycon
 >>> from phonenumbers import timezone
 >>> gb_number = phonenumbers.parse("+447986123456", "GB")
->>> str(timezone.time_zones_for_number(gb_number))
-"(u'Atlantic/Reykjavik', u'Europe/London')"
+>>> timezone.time_zones_for_number(gb_number)
+('Atlantic/Reykjavik', 'Europe/London')
 ```
 
 For more information about the other functionality available from the library, look in the unit tests or in the original
-[libphonenumber project](https://github.com/googlei18n/libphonenumber).
+[libphonenumber project](https://github.com/google/libphonenumber).
 
 Memory Usage
 ------------
@@ -204,7 +211,7 @@ Project Layout
 * The `python/` directory holds the Python code.
 * The `resources/` directory is a copy of the `resources/`
   directory from
-  [libphonenumber](https://github.com/googlei18n/libphonenumber/tree/master/resources).
+  [libphonenumber](https://github.com/google/libphonenumber/tree/master/resources).
   This is not needed to run the Python code, but is needed when upstream
   changes to the master metadata need to be incorporated.
 * The `tools/` directory holds the tools that are used to process upstream
